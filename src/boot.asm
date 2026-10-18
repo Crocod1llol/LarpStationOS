@@ -27,8 +27,7 @@ printer_done:
     pop si
     ret
   
-;reads a number of sectors and puts them in mem address 0x8500
-
+;reads a number of sectors and puts them in mem address 0x8000
 ;params: al (amount of sectors to read); ch (the target cylinder); 
 ;cl (the target sector); dh (the target head);
 ; dl (the target drive number)
@@ -39,10 +38,9 @@ printer_done:
 ;mov cl, 2                ; sector 2 (sector numbers start at 1)
 ;mov dh, 0                ; head 0
 ;mov dl, [boot_drive]  ; the drive number, its the one that is saved at boot
-
 read_disk_sector:
 
-    mov bx, 0x8500           ;destination
+    mov bx, 0x8000           ;destination
     mov ah, 0x02             ; the target func of int 0x13 to read sectors
 
     int 0x13
@@ -53,6 +51,10 @@ read_disk_sector:
 disk_error:
     mov si, disk_err_msg
     call printer
+    jmp halt
+
+halt:
+    jmp halt
 
 _start: 
     ;data segments
@@ -70,33 +72,63 @@ _start:
     mov [boot_drive], dl     
 
     ;call funny func
-    ;mov si, hello
-    ;call printer
-
-    ;setup params
-    mov al, 1                
-    mov ch, 0                
-    mov cl, 2                
-    mov dh, 0                
-    mov dl, 0x00
-    call read_disk_sector
-
-    ;try to print the mem that the previous func put
-    mov si, 0x8500
+    mov si, hello
     call printer
 
-    ;then halt
-    jmp halt
+    ;start the process to switch to 32 bit mode
+    ;yay
 
-halt:
-    jmp halt
+    ;load the kernel that is in the disk
+    mov al, 1
+    mov ch, 0
+    mov cl, 2
+    mov dh, 0
+    mov dl, [boot_drive]
+    call read_disk_sector
 
+    ;load the Global Descriptor Table
+    lgdt [gdt_descriptor]
 
-hello: db "LarpStationOS: indev build; im trying to use assembly i swear",0
+    ;enable protection
+    mov eax, cr0
+    or eax, 0x1
+    mov cr0, eax
+
+    ;disable interupt
+    cli 
+
+    jmp 0x08:0x8000
+
+hello: db "LarpStationOS: indev build; im trying to use assembly i swear",10, 0
 
 disk_err_msg: db "Reading disk failed",0
 
 boot_drive: db 0
+
+;yes this is copied from somewhere else
+gdt_descriptor:
+    dw gdt_end - gdt_start - 1 ; GDT size - 1
+    dd gdt_start              ; GDT base address
+
+gdt_start:
+    dq 0
+
+gdt_code:
+    dw 0xFFFF
+    dw 0
+    db 0
+    db 10011010b
+    db 11001111b
+    db 0
+
+gdt_data:
+    dw 0xFFFF
+    dw 0
+    db 0
+    db 10010010b
+    db 11001111b
+    db 0
+gdt_end:
 
 ;return the program size
 times 510-($-$$) db 0
