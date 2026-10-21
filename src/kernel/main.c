@@ -1,6 +1,10 @@
+#include "../lib/video.h"
+
 void MainKernel(void) {
 
-    //for now it just puts the cpu to ZZZZ until i work on the next feature
+    clearScreen();
+    putc(0, 5, 'a');
+
     while (1) {
         asm volatile("hlt");
     }
