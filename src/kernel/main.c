@@ -1,4 +1,4 @@
-#include "../lib/video.h"
+#include "../lib/io.h"
 
 void MainKernel(void) {
 
@@ -8,4 +8,5 @@ void MainKernel(void) {
     while (1) {
         asm volatile("hlt");
     }
+
 }
