@@ -12,10 +12,10 @@ nasm src/kernel/start.asm -f elf32 -o start_kernel.o
 gcc -m32 -Wall -Wextra -ffreestanding -fno-pie -fno-pic -fno-stack-protector -fno-builtin -Wl,--section-start=.text=0x8000 -c src/kernel/main.c -o kernel_main.o
 
 #LIB
-gcc -m32 -Wall -Wextra -ffreestanding -fno-pie -fno-pic -fno-stack-protector -fno-builtin -c src/lib/video.c -o video.o
+gcc -m32 -Wall -Wextra -ffreestanding -fno-pie -fno-pic -fno-stack-protector -fno-builtin -c src/lib/io.c -o io.o
 
 #link em using linker.ld config file
-ld -m elf_i386 -T linker.ld -o kernel.bin --oformat binary start_kernel.o kernel_main.o video.o
+ld -m elf_i386 -T linker.ld -o kernel.bin --oformat binary start_kernel.o kernel_main.o io.o
 
 #now link the boot and the rest of the compiled binaries
 cat boot.bin kernel.bin > os.img
